@@ -33,7 +33,6 @@ export default function HomeScreen({navigation}) {
 
         bleManagerEmitter.addListener('BleManagerDiscoverPeripheral', args => {
           console.log('BleManagerDiscoverPeripheral');
-          console.log(args);
           setDevices(currentDevices => [
             ...currentDevices,
             {
