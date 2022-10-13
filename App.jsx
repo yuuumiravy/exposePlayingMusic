@@ -6,8 +6,8 @@
  * @flow strict-local
  */
 
-import React, { Fragment, useEffect, useState } from 'react';
-import type { Node } from 'react';
+import React, {Fragment, useEffect, useState} from 'react';
+import type {Node} from 'react';
 import {
   FlatList,
   NativeEventEmitter,
@@ -33,7 +33,7 @@ import BleManager from 'react-native-ble-manager';
 
 /* $FlowFixMe[missing-local-annot] The type annotation(s) required by Flow's
  * LTI update could not be added via codemod */
-const Section = ({ children, title }): Node => {
+const Section = ({children, title}): Node => {
   const isDarkMode = useColorScheme() === 'dark';
   return (
     <View style={styles.sectionContainer}>
@@ -73,7 +73,7 @@ const App: () => Node = () => {
 
   // BleManagerを起動
   useEffect(() => {
-    BleManager.start({ showAlert: false })
+    BleManager.start({showAlert: false})
       .then(() => {
         console.log('BleManager initialized');
         BleManager.checkState();
@@ -100,7 +100,7 @@ const App: () => Node = () => {
       console.log('BleManagerDiscoverPeripheral');
       setDevices(currentDevices => [
         ...currentDevices,
-        { id: args.id, name: args.name || 'undefinded' },
+        {id: args.id, name: args.name || 'undefinded'},
       ]);
     });
   }, []);
