@@ -6,9 +6,12 @@
  * @flow strict-local
  */
 
-import React from 'react';
-import type {Node} from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
+import type { Node } from 'react';
 import {
+  FlatList,
+  NativeEventEmitter,
+  NativeModules,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -26,9 +29,11 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 
+import BleManager from 'react-native-ble-manager';
+
 /* $FlowFixMe[missing-local-annot] The type annotation(s) required by Flow's
  * LTI update could not be added via codemod */
-const Section = ({children, title}): Node => {
+const Section = ({ children, title }): Node => {
   const isDarkMode = useColorScheme() === 'dark';
   return (
     <View style={styles.sectionContainer}>
@@ -61,6 +66,45 @@ const App: () => Node = () => {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
+  const [status, setStatus] = useState();
+  const [devices, setDevices] = useState([]);
+  const BleManagerModule = NativeModules.BleManager;
+  const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
+
+  // BleManagerを起動
+  useEffect(() => {
+    BleManager.start({ showAlert: false })
+      .then(() => {
+        console.log('BleManager initialized');
+        BleManager.checkState();
+      })
+      .catch(error => {
+        console.log(error);
+      });
+    setDevices([]);
+    BleManager.scan([], 1, false).then(results => {
+      setDevices([]);
+      console.log('Scan started');
+    });
+
+    bleManagerEmitter.addListener('BleManagerDidUpdateState', args => {
+      setStatus(args.state);
+    });
+
+    bleManagerEmitter.addListener('BleManagerStopScan', () => {
+      // Scanning is stopped
+      console.log('BleManagerStopScan');
+    });
+
+    bleManagerEmitter.addListener('BleManagerDiscoverPeripheral', args => {
+      console.log('BleManagerDiscoverPeripheral');
+      setDevices(currentDevices => [
+        ...currentDevices,
+        { id: args.id, name: args.name || 'undefinded' },
+      ]);
+    });
+  }, []);
+
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar
@@ -78,6 +122,27 @@ const App: () => Node = () => {
           <Section title="Step One">
             Edit <Text style={styles.highlight}>App.js</Text> to change this
             screen and then come back to see your edits.
+          </Section>
+          <Section title="Bluetooth">Status: {status}</Section>
+          <Section title="Bluetooth Devices">
+            {/* {
+              <FlatList
+                data={devices}
+                renderItem={({ item }) => {
+                  return (
+                    <Text key={item.id}>
+                      id: {item.id}
+                      {item.name}
+                    </Text>
+                  );
+                }}
+              />
+            } */}
+            {devices.map(device => (
+              <View key={device.id}>
+                <Text>{device.name}</Text>
+              </View>
+            ))}
           </Section>
           <Section title="See Your Changes">
             <ReloadInstructions />
